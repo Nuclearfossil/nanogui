@@ -35,7 +35,7 @@ An example:
 <pre> using AdvancedGridLayout::Anchor; Label *label = new Label(window, "A
 label"); // Add a centered label at grid position (1, 5), which spans two
 horizontal cells layout->setAnchor(label, Anchor(1, 5, 2, 1,
-Alignent::Middle, Alignment::Middle)); </pre>
+Alignment::Middle, Alignment::Middle)); </pre>
 
 The grid is initialized with user-specified column and row size vectors
 (which can be expanded later on if desired). If a size value of zero is
@@ -208,6 +208,8 @@ static const char *__doc_nanogui_Button_icon = R"doc()doc";
 
 static const char *__doc_nanogui_Button_iconPosition = R"doc()doc";
 
+static const char *__doc_nanogui_Button_load = R"doc()doc";
+
 static const char *__doc_nanogui_Button_mBackgroundColor = R"doc()doc";
 
 static const char *__doc_nanogui_Button_mButtonGroup = R"doc()doc";
@@ -233,6 +235,8 @@ static const char *__doc_nanogui_Button_mouseButtonEvent = R"doc()doc";
 static const char *__doc_nanogui_Button_preferredSize = R"doc()doc";
 
 static const char *__doc_nanogui_Button_pushed = R"doc()doc";
+
+static const char *__doc_nanogui_Button_save = R"doc()doc";
 
 static const char *__doc_nanogui_Button_setBackgroundColor = R"doc()doc";
 
@@ -268,6 +272,8 @@ static const char *__doc_nanogui_CheckBox_checked = R"doc()doc";
 
 static const char *__doc_nanogui_CheckBox_draw = R"doc()doc";
 
+static const char *__doc_nanogui_CheckBox_load = R"doc()doc";
+
 static const char *__doc_nanogui_CheckBox_mCallback = R"doc()doc";
 
 static const char *__doc_nanogui_CheckBox_mCaption = R"doc()doc";
@@ -281,6 +287,8 @@ static const char *__doc_nanogui_CheckBox_mouseButtonEvent = R"doc()doc";
 static const char *__doc_nanogui_CheckBox_preferredSize = R"doc()doc";
 
 static const char *__doc_nanogui_CheckBox_pushed = R"doc()doc";
+
+static const char *__doc_nanogui_CheckBox_save = R"doc()doc";
 
 static const char *__doc_nanogui_CheckBox_setCallback = R"doc()doc";
 
@@ -324,6 +332,8 @@ static const char *__doc_nanogui_ColorWheel_draw = R"doc()doc";
 
 static const char *__doc_nanogui_ColorWheel_hue2rgb = R"doc()doc";
 
+static const char *__doc_nanogui_ColorWheel_load = R"doc()doc";
+
 static const char *__doc_nanogui_ColorWheel_mBlack = R"doc()doc";
 
 static const char *__doc_nanogui_ColorWheel_mCallback = R"doc()doc";
@@ -339,6 +349,8 @@ static const char *__doc_nanogui_ColorWheel_mouseButtonEvent = R"doc()doc";
 static const char *__doc_nanogui_ColorWheel_mouseDragEvent = R"doc()doc";
 
 static const char *__doc_nanogui_ColorWheel_preferredSize = R"doc()doc";
+
+static const char *__doc_nanogui_ColorWheel_save = R"doc()doc";
 
 static const char *__doc_nanogui_ColorWheel_setCallback = R"doc()doc";
 
@@ -400,6 +412,8 @@ static const char *__doc_nanogui_ComboBox_items = R"doc()doc";
 
 static const char *__doc_nanogui_ComboBox_itemsShort = R"doc()doc";
 
+static const char *__doc_nanogui_ComboBox_load = R"doc()doc";
+
 static const char *__doc_nanogui_ComboBox_mCallback = R"doc()doc";
 
 static const char *__doc_nanogui_ComboBox_mItems = R"doc()doc";
@@ -407,6 +421,8 @@ static const char *__doc_nanogui_ComboBox_mItems = R"doc()doc";
 static const char *__doc_nanogui_ComboBox_mItemsShort = R"doc()doc";
 
 static const char *__doc_nanogui_ComboBox_mSelectedIndex = R"doc()doc";
+
+static const char *__doc_nanogui_ComboBox_save = R"doc()doc";
 
 static const char *__doc_nanogui_ComboBox_selectedIndex = R"doc()doc";
 
@@ -421,6 +437,12 @@ static const char *__doc_nanogui_ComboBox_setSelectedIndex = R"doc()doc";
 static const char *__doc_nanogui_FloatBox = R"doc()doc";
 
 static const char *__doc_nanogui_FloatBox_FloatBox_Scalar_ = R"doc()doc";
+
+static const char *__doc_nanogui_FloatBox_mNumberFormat = R"doc()doc";
+
+static const char *__doc_nanogui_FloatBox_numberFormat = R"doc()doc";
+
+static const char *__doc_nanogui_FloatBox_numberFormat_2 = R"doc()doc";
 
 static const char *__doc_nanogui_FloatBox_setCallback = R"doc()doc";
 
@@ -526,9 +548,13 @@ static const char *__doc_nanogui_GLFramebuffer = R"doc(Helper class for creating
 
 static const char *__doc_nanogui_GLFramebuffer_GLFramebuffer = R"doc()doc";
 
-static const char *__doc_nanogui_GLFramebuffer_bind = R"doc(Bind the framebuffer boject)doc";
+static const char *__doc_nanogui_GLFramebuffer_bind = R"doc(Bind the framebuffer object)doc";
 
 static const char *__doc_nanogui_GLFramebuffer_blit = R"doc(Blit the framebuffer object onto the screen)doc";
+
+static const char *__doc_nanogui_GLFramebuffer_downloadTGA = 
+R"doc(Quick and dirty method to write a TGA (32bpp RGBA) file of the framebuffer
+contents for debugging)doc";
 
 static const char *__doc_nanogui_GLFramebuffer_free = R"doc(Release all associated resources)doc";
 
@@ -660,6 +686,8 @@ static const char *__doc_nanogui_Graph_foregroundColor = R"doc()doc";
 
 static const char *__doc_nanogui_Graph_header = R"doc()doc";
 
+static const char *__doc_nanogui_Graph_load = R"doc()doc";
+
 static const char *__doc_nanogui_Graph_mBackgroundColor = R"doc()doc";
 
 static const char *__doc_nanogui_Graph_mCaption = R"doc()doc";
@@ -675,6 +703,8 @@ static const char *__doc_nanogui_Graph_mTextColor = R"doc()doc";
 static const char *__doc_nanogui_Graph_mValues = R"doc()doc";
 
 static const char *__doc_nanogui_Graph_preferredSize = R"doc()doc";
+
+static const char *__doc_nanogui_Graph_save = R"doc()doc";
 
 static const char *__doc_nanogui_Graph_setBackgroundColor = R"doc()doc";
 
@@ -837,9 +867,11 @@ static const char *__doc_nanogui_ImageView_draw = R"doc()doc";
 
 static const char *__doc_nanogui_ImageView_image = R"doc()doc";
 
-static const char *__doc_nanogui_ImageView_policy = R"doc()doc";
-
 static const char *__doc_nanogui_ImageView_mImage = R"doc()doc";
+
+static const char *__doc_nanogui_ImageView_mPolicy = R"doc()doc";
+
+static const char *__doc_nanogui_ImageView_policy = R"doc()doc";
 
 static const char *__doc_nanogui_ImageView_preferredSize = R"doc()doc";
 
@@ -873,6 +905,8 @@ static const char *__doc_nanogui_Label_draw = R"doc(Draw the label)doc";
 
 static const char *__doc_nanogui_Label_font = R"doc(Get the currently active font)doc";
 
+static const char *__doc_nanogui_Label_load = R"doc()doc";
+
 static const char *__doc_nanogui_Label_mCaption = R"doc()doc";
 
 static const char *__doc_nanogui_Label_mColor = R"doc()doc";
@@ -881,6 +915,8 @@ static const char *__doc_nanogui_Label_mFont = R"doc()doc";
 
 static const char *__doc_nanogui_Label_preferredSize = R"doc(Compute the size needed to fully display the label)doc";
 
+static const char *__doc_nanogui_Label_save = R"doc()doc";
+
 static const char *__doc_nanogui_Label_setCaption = R"doc(Set the label's text caption)doc";
 
 static const char *__doc_nanogui_Label_setColor = R"doc(Set the label color)doc";
@@ -888,6 +924,8 @@ static const char *__doc_nanogui_Label_setColor = R"doc(Set the label color)doc"
 static const char *__doc_nanogui_Label_setFont = 
 R"doc(Set the currently active font (2 are available by default: 'sans' and
 'sans-bold'))doc";
+
+static const char *__doc_nanogui_Label_setTheme = R"doc(Set the Theme used to draw this widget)doc";
 
 static const char *__doc_nanogui_Layout = R"doc(Basic interface of a layout engine)doc";
 
@@ -902,6 +940,12 @@ static const char *__doc_nanogui_MessageDialog_MessageDialog = R"doc()doc";
 static const char *__doc_nanogui_MessageDialog_callback = R"doc()doc";
 
 static const char *__doc_nanogui_MessageDialog_mCallback = R"doc()doc";
+
+static const char *__doc_nanogui_MessageDialog_mMessageLabel = R"doc()doc";
+
+static const char *__doc_nanogui_MessageDialog_messageLabel = R"doc()doc";
+
+static const char *__doc_nanogui_MessageDialog_messageLabel_2 = R"doc()doc";
 
 static const char *__doc_nanogui_MessageDialog_setCallback = R"doc()doc";
 
@@ -937,6 +981,8 @@ static const char *__doc_nanogui_PopupButton_chevronIcon = R"doc()doc";
 
 static const char *__doc_nanogui_PopupButton_draw = R"doc()doc";
 
+static const char *__doc_nanogui_PopupButton_load = R"doc()doc";
+
 static const char *__doc_nanogui_PopupButton_mChevronIcon = R"doc()doc";
 
 static const char *__doc_nanogui_PopupButton_mPopup = R"doc()doc";
@@ -948,6 +994,8 @@ static const char *__doc_nanogui_PopupButton_popup = R"doc()doc";
 static const char *__doc_nanogui_PopupButton_popup_2 = R"doc()doc";
 
 static const char *__doc_nanogui_PopupButton_preferredSize = R"doc()doc";
+
+static const char *__doc_nanogui_PopupButton_save = R"doc()doc";
 
 static const char *__doc_nanogui_PopupButton_setChevronIcon = R"doc()doc";
 
@@ -965,6 +1013,8 @@ relative to it)doc";
 
 static const char *__doc_nanogui_Popup_draw = R"doc(Draw the popup window)doc";
 
+static const char *__doc_nanogui_Popup_load = R"doc()doc";
+
 static const char *__doc_nanogui_Popup_mAnchorHeight = R"doc()doc";
 
 static const char *__doc_nanogui_Popup_mAnchorPos = R"doc()doc";
@@ -981,6 +1031,8 @@ any)doc";
 
 static const char *__doc_nanogui_Popup_refreshRelativePlacement = R"doc(Internal helper function to maintain nested window position values)doc";
 
+static const char *__doc_nanogui_Popup_save = R"doc()doc";
+
 static const char *__doc_nanogui_Popup_setAnchorHeight = 
 R"doc(Set the anchor height; this determines the vertical shift relative to the
 anchor position)doc";
@@ -995,9 +1047,13 @@ static const char *__doc_nanogui_ProgressBar_ProgressBar = R"doc()doc";
 
 static const char *__doc_nanogui_ProgressBar_draw = R"doc()doc";
 
+static const char *__doc_nanogui_ProgressBar_load = R"doc()doc";
+
 static const char *__doc_nanogui_ProgressBar_mValue = R"doc()doc";
 
 static const char *__doc_nanogui_ProgressBar_preferredSize = R"doc()doc";
+
+static const char *__doc_nanogui_ProgressBar_save = R"doc()doc";
 
 static const char *__doc_nanogui_ProgressBar_setValue = R"doc()doc";
 
@@ -1069,6 +1125,8 @@ static const char *__doc_nanogui_Screen_mFBSize = R"doc()doc";
 
 static const char *__doc_nanogui_Screen_mFocusPath = R"doc()doc";
 
+static const char *__doc_nanogui_Screen_mFullscreen = R"doc()doc";
+
 static const char *__doc_nanogui_Screen_mGLFWWindow = R"doc()doc";
 
 static const char *__doc_nanogui_Screen_mLastInteraction = R"doc()doc";
@@ -1096,8 +1154,6 @@ static const char *__doc_nanogui_Screen_moveWindowToFront = R"doc()doc";
 static const char *__doc_nanogui_Screen_nvgContext = R"doc(Return a pointer to the underlying nanoVG draw context)doc";
 
 static const char *__doc_nanogui_Screen_performLayout = R"doc(Compute the layout of all widgets)doc";
-
-static const char *__doc_nanogui_Screen_performLayout_2 = R"doc()doc";
 
 static const char *__doc_nanogui_Screen_resizeCallbackEvent = R"doc()doc";
 
@@ -1133,6 +1189,8 @@ static const char *__doc_nanogui_Slider_highlightColor = R"doc()doc";
 
 static const char *__doc_nanogui_Slider_highlightedRange = R"doc()doc";
 
+static const char *__doc_nanogui_Slider_load = R"doc()doc";
+
 static const char *__doc_nanogui_Slider_mCallback = R"doc()doc";
 
 static const char *__doc_nanogui_Slider_mFinalCallback = R"doc()doc";
@@ -1148,6 +1206,8 @@ static const char *__doc_nanogui_Slider_mouseButtonEvent = R"doc()doc";
 static const char *__doc_nanogui_Slider_mouseDragEvent = R"doc()doc";
 
 static const char *__doc_nanogui_Slider_preferredSize = R"doc()doc";
+
+static const char *__doc_nanogui_Slider_save = R"doc()doc";
 
 static const char *__doc_nanogui_Slider_setCallback = R"doc()doc";
 
@@ -1190,6 +1250,8 @@ static const char *__doc_nanogui_TextBox_format = R"doc(Return the underlying re
 static const char *__doc_nanogui_TextBox_keyboardCharacterEvent = R"doc()doc";
 
 static const char *__doc_nanogui_TextBox_keyboardEvent = R"doc()doc";
+
+static const char *__doc_nanogui_TextBox_load = R"doc()doc";
 
 static const char *__doc_nanogui_TextBox_mAlignment = R"doc()doc";
 
@@ -1243,6 +1305,8 @@ static const char *__doc_nanogui_TextBox_position2CursorIndex = R"doc()doc";
 
 static const char *__doc_nanogui_TextBox_preferredSize = R"doc()doc";
 
+static const char *__doc_nanogui_TextBox_save = R"doc()doc";
+
 static const char *__doc_nanogui_TextBox_setAlignment = R"doc()doc";
 
 static const char *__doc_nanogui_TextBox_setCallback = R"doc()doc";
@@ -1252,6 +1316,8 @@ static const char *__doc_nanogui_TextBox_setDefaultValue = R"doc()doc";
 static const char *__doc_nanogui_TextBox_setEditable = R"doc()doc";
 
 static const char *__doc_nanogui_TextBox_setFormat = R"doc(Specify a regular expression specifying valid formats)doc";
+
+static const char *__doc_nanogui_TextBox_setTheme = R"doc(Set the Theme used to draw this widget)doc";
 
 static const char *__doc_nanogui_TextBox_setUnits = R"doc()doc";
 
@@ -1351,6 +1417,8 @@ static const char *__doc_nanogui_VScrollPanel_VScrollPanel = R"doc()doc";
 
 static const char *__doc_nanogui_VScrollPanel_draw = R"doc()doc";
 
+static const char *__doc_nanogui_VScrollPanel_load = R"doc()doc";
+
 static const char *__doc_nanogui_VScrollPanel_mChildPreferredHeight = R"doc()doc";
 
 static const char *__doc_nanogui_VScrollPanel_mScroll = R"doc()doc";
@@ -1364,6 +1432,8 @@ static const char *__doc_nanogui_VScrollPanel_mouseMotionEvent = R"doc()doc";
 static const char *__doc_nanogui_VScrollPanel_performLayout = R"doc()doc";
 
 static const char *__doc_nanogui_VScrollPanel_preferredSize = R"doc()doc";
+
+static const char *__doc_nanogui_VScrollPanel_save = R"doc()doc";
 
 static const char *__doc_nanogui_VScrollPanel_scrollEvent = R"doc()doc";
 
@@ -1428,6 +1498,8 @@ static const char *__doc_nanogui_Widget_layout = R"doc(Return the used Layout ge
 
 static const char *__doc_nanogui_Widget_layout_2 = R"doc(Return the used Layout generator)doc";
 
+static const char *__doc_nanogui_Widget_load = R"doc(Restore the state of the widget from the given Serializer instance)doc";
+
 static const char *__doc_nanogui_Widget_mChildren = R"doc()doc";
 
 static const char *__doc_nanogui_Widget_mCursor = R"doc()doc";
@@ -1485,6 +1557,8 @@ static const char *__doc_nanogui_Widget_removeChild = R"doc(Remove a child widge
 static const char *__doc_nanogui_Widget_removeChild_2 = R"doc(Remove a child widget by value)doc";
 
 static const char *__doc_nanogui_Widget_requestFocus = R"doc(Request the focus to be moved to this widget)doc";
+
+static const char *__doc_nanogui_Widget_save = R"doc(Save the state of the widget into the given Serializer instance)doc";
 
 static const char *__doc_nanogui_Widget_scrollEvent = R"doc(Handle a mouse scroll event (default implementation: propagate to children))doc";
 
@@ -1555,11 +1629,17 @@ static const char *__doc_nanogui_Window = R"doc()doc";
 
 static const char *__doc_nanogui_Window_Window = R"doc()doc";
 
+static const char *__doc_nanogui_Window_buttonPanel = R"doc(Return the panel used to house window buttons)doc";
+
 static const char *__doc_nanogui_Window_center = R"doc(Center the window in the current Screen)doc";
 
 static const char *__doc_nanogui_Window_dispose = R"doc(Dispose the window)doc";
 
 static const char *__doc_nanogui_Window_draw = R"doc(Draw the window)doc";
+
+static const char *__doc_nanogui_Window_load = R"doc()doc";
+
+static const char *__doc_nanogui_Window_mButtonPanel = R"doc()doc";
 
 static const char *__doc_nanogui_Window_mDrag = R"doc()doc";
 
@@ -1573,11 +1653,17 @@ static const char *__doc_nanogui_Window_mouseButtonEvent = R"doc(Handle mouse ev
 
 static const char *__doc_nanogui_Window_mouseDragEvent = R"doc(Handle window drag events)doc";
 
+static const char *__doc_nanogui_Window_performLayout = 
+R"doc(Invoke the associated layout generator to properly place child widgets, if
+any)doc";
+
 static const char *__doc_nanogui_Window_preferredSize = R"doc(Compute the preferred size of the widget)doc";
 
 static const char *__doc_nanogui_Window_refreshRelativePlacement = 
 R"doc(Internal helper function to maintain nested window position values;
 overridden in Popup)doc";
+
+static const char *__doc_nanogui_Window_save = R"doc()doc";
 
 static const char *__doc_nanogui_Window_scrollEvent = 
 R"doc(Accept scroll events and propagate them to the widget under the mouse
@@ -1644,7 +1730,41 @@ with ImagePanel))doc";
 
 static const char *__doc_nanogui_lookAt = R"doc()doc";
 
-static const char *__doc_nanogui_mainloop = R"doc(Enter the application main loop)doc";
+static const char *__doc_nanogui_mainloop = 
+R"doc(Enter the application main loop
+
+Parameter ``refresh``:
+    NanoGUI issues a redraw call whenever an keyboard/mouse/.. event is
+    received. In the absence of any external events, it enforces a redraw
+    once every ``refresh`` milliseconds. To disable the refresh timer,
+    specify a negative value here.
+
+Parameter ``detach``:
+    This pararameter only exists in the Python bindings. When the active
+    ``Screen`` instance is provided via the ``detach`` parameter, the
+    ``mainloop()`` function becomes non-blocking and returns immediately
+    (in this case, the main loop runs in parallel on a newly created
+    thread). This feature is convenient for prototyping user interfaces on
+    an interactive Python command prompt.
+
+When ``detach != None``, the function returns an opaque handle that will
+release any resources allocated by the created thread when the handle's
+``join()`` method is invoked (or when it is garbage collected).
+
+Remark:
+    Unfortunately, Mac OS X strictly requires all event processing to take
+    place on the application's main thread, which is fundamentally
+    incompatible with this type of approach. Thus, NanoGUI relies on a
+    rather crazy workaround on Mac OS (kudos to Dmitriy Morozov):
+    ``mainloop()`` launches a new thread as before but then uses libcoro to
+    swap the thread execution environment (stack, registers, ..) with the
+    main thread. This means that the main application thread is hijacked
+    and processes events in the main loop to satisfy the requirements on
+    Mac OS, while the thread that actually returns from this function is
+    the newly created one (paradoxical, as that may seem). Deleting or
+    ``join()``ing the returned handle causes application to wait for the
+    termination of the main loop and then swap the two thread environments
+    back into their initial configuration.)doc";
 
 static const char *__doc_nanogui_nvgIsFontIcon = 
 R"doc(Determine whether an icon ID is a font-based icon (e.g. from the entypo.ttf

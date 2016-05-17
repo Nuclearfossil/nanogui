@@ -2,7 +2,7 @@
     src/vscrollpanel.cpp -- Adds a vertical scrollbar around a widget
     that is too big to fit into a certain area
 
-    NanoGUI was developed by Wenzel Jakob <wenzel@inf.ethz.ch>.
+    NanoGUI was developed by Wenzel Jakob <wenzel.jakob@epfl.ch>.
     The widget drawing code is based on the NanoVG demo application
     by Mikko Mononen.
 
@@ -13,13 +13,16 @@
 #include <nanogui/vscrollpanel.h>
 #include <nanogui/theme.h>
 #include <nanogui/opengl.h>
+#include <nanogui/serializer/core.h>
 
 NAMESPACE_BEGIN(nanogui)
 
 VScrollPanel::VScrollPanel(Widget *parent)
-    : Widget(parent), mChildPreferredHeight(0), mScroll(0.0f) {}
+    : Widget(parent), mChildPreferredHeight(0), mScroll(0.0f) { }
 
 void VScrollPanel::performLayout(NVGcontext *ctx) {
+    Widget::performLayout(ctx);
+
     if (mChildren.empty())
         return;
     Widget *child = mChildren[0];
@@ -107,6 +110,19 @@ void VScrollPanel::draw(NVGcontext *ctx) {
                    scrollh - 2, 2);
     nvgFillPaint(ctx, paint);
     nvgFill(ctx);
+}
+
+void VScrollPanel::save(Serializer &s) const {
+    Widget::save(s);
+    s.set("childPreferredHeight", mChildPreferredHeight);
+    s.set("scroll", mScroll);
+}
+
+bool VScrollPanel::load(Serializer &s) {
+    if (!Widget::load(s)) return false;
+    if (!s.get("childPreferredHeight", mChildPreferredHeight)) return false;
+    if (!s.get("scroll", mScroll)) return false;
+    return true;
 }
 
 NAMESPACE_END(nanogui)

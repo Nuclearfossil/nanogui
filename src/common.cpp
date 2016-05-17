@@ -1,7 +1,7 @@
 /*
     nanogui/nanogui.cpp -- Basic initialization and utility routines
 
-    NanoGUI was developed by Wenzel Jakob <wenzel@inf.ethz.ch>.
+    NanoGUI was developed by Wenzel Jakob <wenzel.jakob@epfl.ch>.
     The widget drawing code is based on the NanoVG demo application
     by Mikko Mononen.
 
@@ -10,16 +10,18 @@
 */
 
 #include <nanogui/screen.h>
-#if defined(WIN32)
+
+#if defined(_WIN32)
 #include <windows.h>
 #endif
+
 #include <nanogui/opengl.h>
 #include <map>
 #include <thread>
 #include <chrono>
 #include <iostream>
 
-#if !defined(WIN32)
+#if !defined(_WIN32)
     #include <locale.h>
     #include <signal.h>
     #include <sys/dir.h>
@@ -27,18 +29,19 @@
 
 NAMESPACE_BEGIN(nanogui)
 
-static bool __mainloop_active = false;
 extern std::map<GLFWwindow *, Screen *> __nanogui_screens;
 
 void init() {
-    #if !defined(WIN32)
+    #if !defined(_WIN32)
         /* Avoid locale-related number parsing issues */
         setlocale(LC_NUMERIC, "C");
     #endif
 
     glfwSetErrorCallback(
-        [](int error, const char *desc) {
-            std::cerr << "GLFW error " << error << ": " << desc << std::endl;
+        [](int error, const char *descr) {
+            if (error == GLFW_NOT_INITIALIZED)
+                return; /* Ignore */
+            std::cerr << "GLFW error " << error << ": " << descr << std::endl;
         }
     );
 
@@ -48,25 +51,33 @@ void init() {
     glfwSetTime(0);
 }
 
-void mainloop() {
-    __mainloop_active = true;
+static bool mainloop_active = false;
 
-    /* If there are no mouse/keyboard events, try to refresh the
-       view roughly every 50 ms; this is to support animations
-       such as progress bars while keeping the system load
-       reasonably low */
-    std::thread refresh_thread = std::thread(
-        [&]() {
-            std::chrono::milliseconds time(50);
-            while (__mainloop_active) {
-                std::this_thread::sleep_for(time);
-                glfwPostEmptyEvent();
+void mainloop(int refresh) {
+    if (mainloop_active)
+        throw std::runtime_error("Main loop is already running!");
+
+    mainloop_active = true;
+
+    std::thread refresh_thread;
+    if (refresh > 0) {
+        /* If there are no mouse/keyboard events, try to refresh the
+           view roughly every 50 ms (default); this is to support animations
+           such as progress bars while keeping the system load
+           reasonably low */
+        refresh_thread = std::thread(
+            [refresh]() {
+                std::chrono::milliseconds time(refresh);
+                while (mainloop_active) {
+                    std::this_thread::sleep_for(time);
+                    glfwPostEmptyEvent();
+                }
             }
-        }
-    );
+        );
+    }
 
     try {
-        while (__mainloop_active) {
+        while (mainloop_active) {
             int numScreens = 0;
             for (auto kv : __nanogui_screens) {
                 Screen *screen = kv.second;
@@ -82,23 +93,27 @@ void mainloop() {
 
             if (numScreens == 0) {
                 /* Give up if there was nothing to draw */
-                __mainloop_active = false;
+                mainloop_active = false;
                 break;
             }
 
             /* Wait for mouse/keyboard or empty refresh events */
             glfwWaitEvents();
         }
+
+        /* Process events once more */
+        glfwPollEvents();
     } catch (const std::exception &e) {
         std::cerr << "Caught exception in main loop: " << e.what() << std::endl;
         abort();
     }
 
-    refresh_thread.join();
+    if (refresh > 0)
+        refresh_thread.join();
 }
 
 void leave() {
-    __mainloop_active = false;
+    mainloop_active = false;
 }
 
 void shutdown() {
@@ -141,7 +156,7 @@ int __nanogui_get_image(NVGcontext *ctx, const std::string &name, uint8_t *data,
 std::vector<std::pair<int, std::string>>
 loadImageDirectory(NVGcontext *ctx, const std::string &path) {
     std::vector<std::pair<int, std::string> > result;
-#if !defined(WIN32)
+#if !defined(_WIN32)
     DIR *dp = opendir(path.c_str());
     if (!dp)
         throw std::runtime_error("Could not open image directory!");
@@ -165,7 +180,7 @@ loadImageDirectory(NVGcontext *ctx, const std::string &path) {
             throw std::runtime_error("Could not open image data!");
         result.push_back(
             std::make_pair(img, fullName.substr(0, fullName.length() - 4)));
-#if !defined(WIN32)
+#if !defined(_WIN32)
     }
     closedir(dp);
 #else
@@ -178,7 +193,7 @@ loadImageDirectory(NVGcontext *ctx, const std::string &path) {
 #if !defined(__APPLE__)
 std::string file_dialog(const std::vector<std::pair<std::string, std::string>> &filetypes, bool save) {
 #define FILE_DIALOG_MAX_BUFFER 1024
-#if defined(WIN32)
+#if defined(_WIN32)
     OPENFILENAME ofn;
     ZeroMemory(&ofn, sizeof(OPENFILENAME));
     ofn.lStructSize = sizeof(OPENFILENAME);
@@ -252,6 +267,18 @@ std::string file_dialog(const std::vector<std::pair<std::string, std::string>> &
 #endif
 }
 #endif
+
+void Object::decRef(bool dealloc) const noexcept {
+    --m_refCount;
+    if (m_refCount == 0 && dealloc) {
+        delete this;
+    } else if (m_refCount < 0) {
+        fprintf(stderr, "Internal error: Object reference count < 0!\n");
+        abort();
+    }
+}
+
+Object::~Object() { }
 
 NAMESPACE_END(nanogui)
 

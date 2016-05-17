@@ -1,7 +1,7 @@
 /*
     nanogui/widget.h -- Base class of all widgets
 
-    NanoGUI was developed by Wenzel Jakob <wenzel@inf.ethz.ch>.
+    NanoGUI was developed by Wenzel Jakob <wenzel.jakob@epfl.ch>.
     The widget drawing code is based on the NanoVG demo application
     by Mikko Mononen.
 
@@ -49,7 +49,7 @@ public:
     /// Return the \ref Theme used to draw this widget
     const Theme *theme() const { return mTheme.get(); }
     /// Set the \ref Theme used to draw this widget
-    void setTheme(Theme *theme) { mTheme = theme; }
+    virtual void setTheme(Theme *theme);
 
     /// Return the position relative to the parent widget
     const Vector2i &position() const { return mPos; }
@@ -214,6 +214,11 @@ public:
     /// Draw the widget (and all child widgets)
     virtual void draw(NVGcontext *ctx);
 
+    /// Save the state of the widget into the given \ref Serializer instance
+    virtual void save(Serializer &s) const;
+
+    /// Restore the state of the widget from the given \ref Serializer instance
+    virtual bool load(Serializer &s);
 protected:
     /// Free all resources used by the widget and any children
     virtual ~Widget();

@@ -1,7 +1,7 @@
 /*
     src/button.cpp -- [Normal/Toggle/Radio/Popup] Button widget
 
-    NanoGUI was developed by Wenzel Jakob <wenzel@inf.ethz.ch>.
+    NanoGUI was developed by Wenzel Jakob <wenzel.jakob@epfl.ch>.
     The widget drawing code is based on the NanoVG demo application
     by Mikko Mononen.
 
@@ -12,6 +12,7 @@
 #include <nanogui/button.h>
 #include <nanogui/theme.h>
 #include <nanogui/opengl.h>
+#include <nanogui/serializer/core.h>
 
 NAMESPACE_BEGIN(nanogui)
 
@@ -214,6 +215,29 @@ void Button::draw(NVGcontext *ctx) {
     nvgText(ctx, textPos.x(), textPos.y(), mCaption.c_str(), nullptr);
     nvgFillColor(ctx, textColor);
     nvgText(ctx, textPos.x(), textPos.y() + 1, mCaption.c_str(), nullptr);
+}
+
+void Button::save(Serializer &s) const {
+    Widget::save(s);
+    s.set("caption", mCaption);
+    s.set("icon", mIcon);
+    s.set("iconPosition", (int) mIconPosition);
+    s.set("pushed", mPushed);
+    s.set("flags", mFlags);
+    s.set("backgroundColor", mBackgroundColor);
+    s.set("textColor", mTextColor);
+}
+
+bool Button::load(Serializer &s) {
+    if (!Widget::load(s)) return false;
+    if (!s.get("caption", mCaption)) return false;
+    if (!s.get("icon", mIcon)) return false;
+    if (!s.get("iconPosition", mIconPosition)) return false;
+    if (!s.get("pushed", mPushed)) return false;
+    if (!s.get("flags", mFlags)) return false;
+    if (!s.get("backgroundColor", mBackgroundColor)) return false;
+    if (!s.get("textColor", mTextColor)) return false;
+    return true;
 }
 
 NAMESPACE_END(nanogui)

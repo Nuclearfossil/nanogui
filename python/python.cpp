@@ -2,7 +2,12 @@
 
 #include <nanogui/nanogui.h>
 #include <nanogui/opengl.h>
+#include <thread>
 #include "python.h"
+
+#if defined(__APPLE__)
+#include <coro.h>
+#endif
 
 using namespace nanogui;
 namespace py = pybind11;
@@ -43,29 +48,215 @@ DECLARE_WIDGET(ColorPicker);
 /// Make pybind aware of the ref-counted wrapper type
 PYBIND11_DECLARE_HOLDER_TYPE(T, ref<T>);
 
+#if defined(__APPLE__)
+namespace {
+    class semaphore {
+    public:
+        semaphore(int count = 0) : count(count) { }
+
+        void notify() {
+            std::unique_lock<std::mutex> lck(mtx);
+            ++count;
+            cv.notify_one();
+        }
+
+        void wait() {
+            std::unique_lock<std::mutex> lck(mtx);
+            while (count == 0)
+                cv.wait(lck);
+            --count;
+        }
+
+    private:
+        std::mutex mtx;
+        std::condition_variable cv;
+        int count;
+    };
+}
+#endif
+
+class MainloopHandle;
+static MainloopHandle *handle = nullptr;
+
+class MainloopHandle {
+public:
+    bool active = false;
+    bool detached = false;
+    int refresh = 0;
+    std::thread thread;
+
+    #if defined(__APPLE__)
+        coro_context ctx_helper, ctx_main, ctx_thread;
+        coro_stack stack;
+        semaphore sema;
+    #endif
+
+    ~MainloopHandle() {
+        join();
+        handle = nullptr;
+    }
+
+    void join() {
+        if (!detached)
+            return;
+
+        #if defined(__APPLE__)
+            /* Release GIL and disassociate from thread state (which was originally
+               associated with the main Python thread) */
+            py::gil_scoped_release thread_state(true);
+
+            coro_transfer(&ctx_main, &ctx_thread);
+            coro_stack_free(&stack);
+
+            /* Destroy the thread state that was created in mainloop() */
+            {
+                py::gil_scoped_acquire acquire;
+                acquire.dec_ref();
+            }
+        #endif
+
+        thread.join();
+        detached = false;
+
+        #if defined(__APPLE__)
+            /* Reacquire GIL and reassociate with thread state
+               [via RAII destructor in 'thread_state'] */
+        #endif
+    }
+};
+
 PYBIND11_PLUGIN(nanogui) {
     py::module m("nanogui", "NanoGUI plugin");
 
-    m.def("init", &nanogui::init);
-    m.def("shutdown", &nanogui::init);
-    m.def("mainloop", &nanogui::mainloop);
-    m.def("leave", &nanogui::leave);
-    m.def("file_dialog", &nanogui::file_dialog);
+    py::class_<MainloopHandle>(m, "MainloopHandle")
+        .def("join", &MainloopHandle::join);
+
+    m.def("init", &nanogui::init, D(init));
+    m.def("shutdown", &nanogui::shutdown, D(shutdown));
+    m.def("mainloop", [](int refresh, py::object detach) -> MainloopHandle* {
+        if (detach != py::none()) {
+            if (handle)
+                throw std::runtime_error("Main loop is already running!");
+
+            handle = new MainloopHandle();
+            handle->detached = true;
+            handle->refresh = refresh;
+
+            #if defined(__APPLE__)
+                /* Release GIL and completely disassociate the calling thread
+                   from its associated Python thread state data structure */
+                py::gil_scoped_release thread_state(true);
+
+                /* Create a new thread state for the nanogui main loop
+                   and reference it once (to keep it from being constructed and
+                   destructed at every callback invocation) */
+                {
+                    py::gil_scoped_acquire acquire;
+                    acquire.inc_ref();
+                }
+
+                handle->thread = std::thread([]{
+                    /* Handshake 1: wait for signal from detach_helper */
+                    handle->sema.wait();
+
+                    /* Swap context with main thread */
+                    coro_transfer(&handle->ctx_thread, &handle->ctx_main);
+
+                    /* Handshake 2: wait for signal from detach_helper */
+                    handle->sema.notify();
+                });
+
+                void (*detach_helper)(void *) = [](void *ptr) -> void {
+                    MainloopHandle *handle = (MainloopHandle *) ptr;
+
+                    /* Handshake 1: Send signal to new thread  */
+                    handle->sema.notify();
+
+                    /* Enter main loop */
+                    mainloop(handle->refresh);
+
+                    /* Handshake 2: Wait for signal from new thread */
+                    handle->sema.wait();
+
+                    /* Return back to Python */
+                    coro_transfer(&handle->ctx_helper, &handle->ctx_main);
+                };
+
+                /* Allocate an 8MB stack and transfer context to the
+                   detach_helper function */
+                coro_stack_alloc(&handle->stack, 8 * 1024 * 1024);
+                coro_create(&handle->ctx_helper, detach_helper, handle,
+                            handle->stack.sptr, handle->stack.ssze);
+                coro_transfer(&handle->ctx_main, &handle->ctx_helper);
+            #else
+                handle->thread = std::thread([]{
+                    mainloop(handle->refresh);
+                });
+            #endif
+
+            #if defined(__APPLE__)
+                /* Reacquire GIL and reassociate with thread state on newly
+                   created thread [via RAII destructor in 'thread_state'] */
+            #endif
+
+            return handle;
+        } else {
+            mainloop(refresh);
+            return nullptr;
+        }
+    }, py::arg("refresh") = 50, py::arg("detach") = py::none(),
+       D(mainloop), py::keep_alive<0, 2>());
+
+    m.def("leave", &nanogui::leave, D(leave));
+    m.def("file_dialog", &nanogui::file_dialog, D(file_dialog));
     #if defined(__APPLE__)
         m.def("chdir_to_bundle_parent", &nanogui::chdir_to_bundle_parent);
     #endif
-    m.def("file_dialog", &nanogui::file_dialog);
-    m.def("utf8", [](int c) { return std::string(utf8(c).data()); });
-    m.def("loadImageDirectory", &nanogui::loadImageDirectory);
+    m.def("utf8", [](int c) { return std::string(utf8(c).data()); }, D(utf8));
+    m.def("loadImageDirectory", &nanogui::loadImageDirectory, D(loadImageDirectory));
 
     py::handle vector2i = py::detail::get_type_handle(typeid(Vector2i));
     if (!vector2i) {
         py::class_<Vector2i>(m, "Vector2i")
-            .def(py::init<int, int>());
+            .def(py::init<int, int>())
+            .def_property("x", [](const Vector2i &v) { return v.x();}, [](Vector2i &v, int x) { v.x() = x; })
+            .def_property("y", [](const Vector2i &v) { return v.y();}, [](Vector2i &v, int y) { v.y() = y; })
+            .def("__getitem__", [](const Vector2i &m, size_t i) {
+                if (i >= (size_t) m.size())
+                    throw py::index_error();
+                return m[i];
+             })
+            .def("__setitem__", [](Vector2i &m, size_t i, int v) {
+                if (i >= (size_t) m.size())
+                    throw py::index_error();
+                m[i] = v;
+             });
     } else {
         /* Don't create a new type if some other library has already
            exposed (potentially much fancier) Eigen Python bindings */
         m.attr("Vector2i") = vector2i;
+    }
+
+    py::handle vector2f = py::detail::get_type_handle(typeid(Vector2f));
+    if (!vector2f) {
+        py::class_<Vector2f>(m, "Vector2f")
+            .def(py::init<int, int>())
+            .def_property("x", [](const Vector2f &v) { return v.x();}, [](Vector2f &v, float x) { v.x() = x; })
+            .def_property("y", [](const Vector2f &v) { return v.y();}, [](Vector2f &v, float y) { v.y() = y; })
+            .def("__getitem__", [](const Vector2f &m, size_t i) {
+                if (i >= (size_t) m.size())
+                    throw py::index_error();
+                return m[i];
+             })
+            .def("__setitem__", [](Vector2f &m, size_t i, float v) {
+                if (i >= (size_t) m.size())
+                    throw py::index_error();
+                m[i] = v;
+             });
+    } else {
+        /* Don't create a new type if some other library has already
+           exposed (potentially much fancier) Eigen Python bindings */
+        m.attr("Vector2f") = vector2f;
     }
 
     py::handle vectorXf = py::detail::get_type_handle(typeid(VectorXf));
@@ -80,7 +271,7 @@ PYBIND11_PLUGIN(nanogui) {
             })
             .def("__init__", [](VectorXf &v, py::buffer b) {
                 py::buffer_info info = b.request();
-                if (info.format != py::format_descriptor<float>::value()) {
+                if (info.format != py::format_descriptor<float>::value) {
                     throw std::runtime_error("Incompatible buffer format!");
                 } else if (info.ndim == 1 && info.strides[0] == sizeof(float)) {
                     new (&v) VectorXf(info.shape[0]);
@@ -113,12 +304,12 @@ PYBIND11_PLUGIN(nanogui) {
             /* Buffer access for interacting with NumPy */
             .def_buffer([](VectorXf &m) -> py::buffer_info {
                 return py::buffer_info(
-                    m.data(),                /* Pointer to buffer */
+                    m.data(),               /* Pointer to buffer */
                     sizeof(float),          /* Size of one scalar */
                     /* Python struct-style format descriptor */
-                    py::format_descriptor<float>::value(),
-                    1,                       /* Number of dimensions */
-                    { (size_t) m.size() },   /* Buffer dimensions */
+                    py::format_descriptor<float>::value,
+                    1,                      /* Number of dimensions */
+                    { (size_t) m.size() },  /* Buffer dimensions */
                     { sizeof(float) }       /* Strides (in bytes) for each index */
                 );
              });
@@ -184,6 +375,10 @@ PYBIND11_PLUGIN(nanogui) {
              D(Widget, children), py::return_value_policy::reference)
         .def("addChild", &Widget::addChild, D(Widget, addChild))
         .def("childCount", &Widget::childCount, D(Widget, childCount))
+        .def("__len__", &Widget::childCount, D(Widget, childCount))
+        .def("__iter__", [](const Widget &w) {
+                return py::make_iterator(w.children().begin(), w.children().end());
+            }, py::keep_alive<0, 1>())
         .def("removeChild", (void(Widget::*)(int)) &Widget::removeChild, D(Widget, removeChild))
         .def("removeChild", (void(Widget::*)(const Widget *)) &Widget::removeChild, D(Widget, removeChild, 2))
         .def("window", &Widget::window, D(Widget, window))
@@ -224,9 +419,10 @@ PYBIND11_PLUGIN(nanogui) {
 
     py::class_<PyScreen, ref<PyScreen>>(m, "Screen", widget, D(Screen))
         .alias<Screen>()
-        .def(py::init<const Vector2i &, const std::string &, bool, bool>(),
+        .def(py::init<const Vector2i &, const std::string &, bool, bool, int, int, int, int, int, unsigned int, unsigned int>(),
             py::arg("size"), py::arg("caption"), py::arg("resizable") = true, py::arg("fullscreen") = false,
-            D(Screen, Screen))
+            py::arg("colorBits") = 8, py::arg("alphaBits") = 8, py::arg("depthBits") = 24, py::arg("stencilBits") = 8,
+            py::arg("nSamples") = 0, py::arg("glMajor") = 3, py::arg("glMinor") = 3, D(Screen, Screen))
         .def("caption", &Screen::caption, D(Screen, caption))
         .def("setCaption", &Screen::setCaption, D(Screen, setCaption))
         .def("background", &Screen::background, D(Screen, background))
@@ -254,6 +450,7 @@ PYBIND11_PLUGIN(nanogui) {
         .def("modal", &Window::modal, D(Window, modal))
         .def("setModal", &Window::setModal, D(Window, setModal))
         .def("dispose", &Window::dispose, D(Window, dispose))
+        .def("buttonPanel", &Window::buttonPanel, D(Window, buttonPanel))
         .def("center", &Window::center, D(Window, center));
 
     py::enum_<Alignment>(m, "Alignment")
@@ -454,6 +651,7 @@ PYBIND11_PLUGIN(nanogui) {
             py::arg("parent"), py::arg("type"), py::arg("title") = std::string("Untitled"),
             py::arg("message") = std::string("Message"), py::arg("buttonText") = std::string("OK"),
             py::arg("altButtonText") = std::string("Cancel"), py::arg("altButton") = false)
+        .def("messageLabel", (Label * (MessageDialog::*)()) &MessageDialog::messageLabel, D(MessageDialog, messageLabel))
         .def("callback", &MessageDialog::callback, D(MessageDialog, callback))
         .def("setCallback", &MessageDialog::setCallback, D(MessageDialog, setCallback));
 
@@ -477,7 +675,6 @@ PYBIND11_PLUGIN(nanogui) {
     py::class_<PyImageView, ref<PyImageView>> imageview(m, "ImageView", widget, D(ImageView));
     imageview
         .alias<ImageView>()
-        .def(py::init<Widget *, int, ImageView::SizePolicy>(), py::arg("parent"), py::arg("image") = 0, py::arg("policy") = ImageView::SizePolicy::Fixed, D(ImageView, ImageView))
         .def("image", &ImageView::image, D(ImageView, image))
         .def("setImage", &ImageView::setImage, D(ImageView, setImage))
         .def("policy", &ImageView::policy, D(ImageView, policy))
@@ -486,6 +683,11 @@ PYBIND11_PLUGIN(nanogui) {
     py::enum_<ImageView::SizePolicy>(imageview, "SizePolicy")
         .value("Fixed", ImageView::SizePolicy::Fixed)
         .value("Expand", ImageView::SizePolicy::Expand);
+
+    imageview.def(py::init<Widget *, int, ImageView::SizePolicy>(),
+                  py::arg("parent"), py::arg("image") = 0,
+                  py::arg("policy") = ImageView::SizePolicy::Fixed,
+                  D(ImageView, ImageView));
 
     py::class_<PyComboBox, ref<PyComboBox>>(m, "ComboBox", widget, D(ComboBox))
         .alias<ComboBox>()
